@@ -14,7 +14,6 @@ For those times, `suppress-eslint-errors` has you covered.
 For each eslint error it finds, it adds a little snippet:
 
 ```javascript
-// TODO: Fix this the next time the file is edited.
 // eslint-disable-next-line cool-new-rule
 ```
 
@@ -42,16 +41,14 @@ Be sure to re-run any code formatting tools you use before committing!
 
 ## Options
 
-**--message**: Sets the comment to add above eslint-disable-next-line comments.
-
 **--rules**: Comma-separated list of ESLint rule IDs to disable. When specified, violations of rules not in this set will be left in place.
 
 ## Examples
 
-Suppress all errors in the `index.js` file, using a custom comment:
+Suppress all errors in the `index.js` file:
 
 ```bash
-npx suppress-eslint-errors ./index.js --message="TODO: Issue #123"
+npx suppress-eslint-errors ./index.js
 ```
 
 Suppress violations of the `eqeqeq` and `@typescript-eslint/no-explicit-any` rules in .ts and .tsx files in the `src` directory:

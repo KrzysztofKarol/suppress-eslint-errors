@@ -40,11 +40,6 @@ module.exports = async function codeMod(file, api, options) {
 
 	const result = api.j(file.source);
 
-	const commentText =
-		options && options.message
-			? options.message
-			: 'TODO: Fix this the next time the file is edited.';
-
 	const ruleIdWhitelist = (options.rules || '').split(',').filter((x) => x);
 	const ruleIdWhitelistSet = ruleIdWhitelist.length ? new Set(ruleIdWhitelist) : null;
 
@@ -69,13 +64,13 @@ module.exports = async function codeMod(file, api, options) {
 			continue;
 		}
 
-		addDisableComment(file.path, api, commentText, targetLine, ruleId, firstPathOnLine);
+		addDisableComment(file.path, api, targetLine, ruleId, firstPathOnLine);
 	}
 
 	return result.toSource();
 };
 
-function addDisableComment(filePath, api, commentText, targetLine, ruleId, path) {
+function addDisableComment(filePath, api, targetLine, ruleId, path) {
 	let targetPath = path;
 	while (
 		targetPath.parent &&
@@ -117,10 +112,7 @@ function addDisableComment(filePath, api, commentText, targetLine, ruleId, path)
 			lastStatement.trailingComments = [];
 		}
 
-		const newComments = [
-			createTrailingComment(api, ` ${commentText}`),
-			createTrailingComment(api, ` eslint-disable-next-line ${ruleId}`),
-		];
+		const newComments = [createTrailingComment(api, ` eslint-disable-next-line ${ruleId}`)];
 
 		lastStatement.comments.push(...newComments);
 		lastStatement.trailingComments.push(...newComments);
@@ -135,8 +127,6 @@ function addDisableComment(filePath, api, commentText, targetLine, ruleId, path)
 			return;
 		}
 
-		children.push(createJsxComment(api, commentText));
-		children.push(api.j.jsxText('\n'));
 		children.push(createJsxComment(api, `eslint-disable-next-line ${ruleId}`));
 		children.push(api.j.jsxText('\n'));
 
@@ -144,13 +134,13 @@ function addDisableComment(filePath, api, commentText, targetLine, ruleId, path)
 	}
 
 	if (targetPath.node.type === 'JSXAttribute') {
-		createNormalComment(api, ruleId, commentText, targetPath.value);
+		createNormalComment(api, ruleId, targetPath.value);
 
 		return;
 	}
 
 	if (targetPath.parent && targetPath.parent.node.type === 'JSXExpressionContainer') {
-		createNormalComment(api, ruleId, commentText, targetPath.value);
+		createNormalComment(api, ruleId, targetPath.value);
 
 		return;
 	}
@@ -256,8 +246,6 @@ function addDisableComment(filePath, api, commentText, targetLine, ruleId, path)
 		children.splice(
 			targetIndex,
 			0,
-			createJsxComment(api, commentText),
-			api.j.jsxText('\n'),
 			createJsxComment(api, `eslint-disable-next-line ${ruleId}`),
 			api.j.jsxText('\n')
 		);
@@ -265,10 +253,10 @@ function addDisableComment(filePath, api, commentText, targetLine, ruleId, path)
 		return;
 	}
 
-	createNormalComment(api, ruleId, commentText, targetPath.value);
+	createNormalComment(api, ruleId, targetPath.value);
 }
 
-function createNormalComment(api, ruleId, commentText, targetNode) {
+function createNormalComment(api, ruleId, targetNode) {
 	if (tryRewriteEslintDisable(targetNode.leadingComments, ruleId)) {
 		return;
 	}
@@ -281,10 +269,7 @@ function createNormalComment(api, ruleId, commentText, targetNode) {
 		targetNode.leadingComments = [];
 	}
 
-	const newComments = [
-		api.j.line(` ${commentText}`),
-		api.j.line(` eslint-disable-next-line ${ruleId}`),
-	];
+	const newComments = [api.j.line(` eslint-disable-next-line ${ruleId}`)];
 
 	targetNode.comments.push(...newComments);
 	targetNode.leadingComments.push(...newComments);
